@@ -1,0 +1,21 @@
+agent:
+  name: Test Agent
+  version: 0.0.1
+  memory:
+    max-messages: 10
+llm:
+  provider: ollama
+  ollama:
+    base-url: http://localhost:11434
+    model: llama3.1:8b
+    temperature: 0.1
+    timeout-seconds: 30
+storage:
+  provider: local
+  local:
+    bucket-root: /tmp/test-buckets
+output:
+  verbosity: auto
+  color: true
+logging:
+  level: INFO
