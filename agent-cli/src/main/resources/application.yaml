@@ -8,7 +8,7 @@ llm:
   ollama:
     base-url: http://localhost:11434
     model: llama3.1:8b
-    temperature: 0.1
+    temperature: 0.3
     timeout-seconds: 60
 storage:
   provider: local

@@ -23,6 +23,7 @@ public class DeltaSyncService {
         int skipped = 0;
         int total = 0;
         long bytesTransferred = 0;
+        StringBuilder log = new StringBuilder();
 
         try (Stream<Path> walk = Files.walk(localDir)) {
             var files = walk.filter(Files::isRegularFile).toList();
@@ -36,10 +37,14 @@ public class DeltaSyncService {
                 boolean needsUpload = false;
                 if (!storageAdapter.exists(bucketName, key)) {
                     needsUpload = true;
+                    log.append(String.format("  [NEW]     %s (%s)%n", key, formatBytes(content.length)));
                 } else {
                     FileMetadata remoteMetadata = storageAdapter.getMetadata(bucketName, key);
                     if (!remoteMetadata.md5Hash().equals(localMd5)) {
                         needsUpload = true;
+                        log.append(String.format("  [UPDATED] %s (%s)%n", key, formatBytes(content.length)));
+                    } else {
+                        log.append(String.format("  [SKIP]    %s (unchanged)%n", key));
                     }
                 }
 
@@ -56,8 +61,10 @@ public class DeltaSyncService {
         }
 
         String transferredStr = formatBytes(bytesTransferred);
-        return String.format("Synced %d/%d files. %d skipped (unchanged). %s transferred.",
+        String summary = String.format("Synced %d/%d files. %d skipped (unchanged). %s transferred.",
                 synced, total, skipped, transferredStr);
+
+        return summary + "\n" + log.toString().stripTrailing();
     }
 
     private String formatBytes(long bytes) {
