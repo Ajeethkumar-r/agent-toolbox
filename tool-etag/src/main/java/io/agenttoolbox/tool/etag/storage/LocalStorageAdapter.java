@@ -131,6 +131,36 @@ public class LocalStorageAdapter implements StorageAdapter {
         return Files.exists(resolveFilePath(bucket, key));
     }
 
+    @Override
+    public List<String> listBuckets() {
+        if (!Files.exists(bucketRoot)) {
+            return List.of();
+        }
+        try (Stream<Path> dirs = Files.list(bucketRoot)) {
+            return dirs.filter(Files::isDirectory)
+                    .map(p -> p.getFileName().toString())
+                    .sorted()
+                    .toList();
+        } catch (IOException e) {
+            throw new StorageException("Failed to list buckets", e);
+        }
+    }
+
+    @Override
+    public void delete(String bucket, String key) {
+        Path filePath = resolveFilePath(bucket, key);
+        Path metadataPath = resolveMetadataPath(bucket, key);
+        if (!Files.exists(filePath)) {
+            throw new FileNotFoundException(bucket, key);
+        }
+        try {
+            Files.deleteIfExists(filePath);
+            Files.deleteIfExists(metadataPath);
+        } catch (IOException e) {
+            throw new StorageException("Failed to delete: " + bucket + "/" + key, e);
+        }
+    }
+
     private Path resolveFilePath(String bucket, String key) {
         return bucketRoot.resolve(bucket).resolve(key);
     }

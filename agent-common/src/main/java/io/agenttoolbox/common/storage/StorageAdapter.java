@@ -11,4 +11,6 @@ public interface StorageAdapter {
     ConditionalReadResult conditionalRead(String bucket, String key, String ifNoneMatchEtag);
     List<FileMetadata> list(String bucket, String prefix);
     boolean exists(String bucket, String key);
+    List<String> listBuckets();
+    void delete(String bucket, String key);
 }

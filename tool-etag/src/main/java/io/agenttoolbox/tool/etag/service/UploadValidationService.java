@@ -23,6 +23,11 @@ public class UploadValidationService {
             byte[] content = Files.readAllBytes(path);
             String md5 = Md5Hasher.hashBytes(content);
 
+            // Auto-derive key from filename if empty or null
+            if (destinationKey == null || destinationKey.isBlank()) {
+                destinationKey = path.getFileName().toString();
+            }
+
             FileMetadata metadata = storageAdapter.write(bucketName, destinationKey, content, md5);
 
             return String.format("Uploaded %s to %s/%s (%d bytes, MD5 verified: %s)",
