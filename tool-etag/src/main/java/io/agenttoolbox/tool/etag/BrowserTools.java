@@ -23,14 +23,17 @@ public class BrowserTools {
         try {
             String cacheKey = "buckets";
             String cached = cache.get(cacheKey);
-            if (cached != null) return "[cached] " + cached;
+            if (cached != null) {
+                progress("[cached] Listing buckets...");
+                return cached;
+            }
 
-            StringBuilder sb = new StringBuilder("Listing buckets...\n");
+            progress("Listing buckets...");
             List<String> buckets = storageAdapter.listBuckets();
             if (buckets.isEmpty()) {
-                sb.append("No buckets found.");
-                return sb.toString();
+                return "No buckets found.";
             }
+            StringBuilder sb = new StringBuilder();
             sb.append(String.format("Found %d bucket(s):%n", buckets.size()));
             for (String bucket : buckets) {
                 sb.append(String.format("  - %s%n", bucket));
@@ -51,16 +54,17 @@ public class BrowserTools {
             if (prefix == null) prefix = "";
             String cacheKey = ToolCache.key(bucketName, "files", prefix);
             String cached = cache.get(cacheKey);
-            if (cached != null) return "[cached] " + cached;
+            if (cached != null) {
+                progress("[cached] Listing files in %s...", bucketName);
+                return cached;
+            }
 
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Listing files in %s%s...%n",
-                    bucketName, prefix.isEmpty() ? "" : " (prefix: " + prefix + ")"));
+            progress("Listing files in %s%s...", bucketName, prefix.isEmpty() ? "" : " (prefix: " + prefix + ")");
             List<FileMetadata> files = storageAdapter.list(bucketName, prefix);
             if (files.isEmpty()) {
-                sb.append("No files found.");
-                return sb.toString();
+                return "No files found in " + bucketName;
             }
+            StringBuilder sb = new StringBuilder();
             sb.append(String.format("Found %d file(s):%n", files.size()));
             for (FileMetadata meta : files) {
                 sb.append(String.format("  %-40s %8s  ETag: %s%n",
@@ -81,18 +85,19 @@ public class BrowserTools {
         try {
             String cacheKey = ToolCache.key(bucketName, "info", fileKey);
             String cached = cache.get(cacheKey);
-            if (cached != null) return "[cached] " + cached;
+            if (cached != null) {
+                progress("[cached] Fetching metadata for %s/%s...", bucketName, fileKey);
+                return cached;
+            }
 
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Fetching metadata for %s/%s...%n", bucketName, fileKey));
+            progress("Fetching metadata for %s/%s...", bucketName, fileKey);
             FileMetadata meta = storageAdapter.getMetadata(bucketName, fileKey);
-            sb.append(String.format("File: %s/%s%n", meta.bucket(), meta.key()));
-            sb.append(String.format("  Size:          %s (%d bytes)%n", formatBytes(meta.size()), meta.size()));
-            sb.append(String.format("  MD5:           %s%n", meta.md5Hash()));
-            sb.append(String.format("  ETag:          %s%n", meta.etag()));
-            sb.append(String.format("  Last Modified: %s%n", meta.lastModified()));
-            sb.append(String.format("  Content Type:  %s", meta.contentType()));
-            String result = sb.toString();
+            String result = String.format(
+                    "File: %s/%s%n  Size:          %s (%d bytes)%n  MD5:           %s%n  ETag:          %s%n  Last Modified: %s%n  Content Type:  %s",
+                    meta.bucket(), meta.key(),
+                    formatBytes(meta.size()), meta.size(),
+                    meta.md5Hash(), meta.etag(),
+                    meta.lastModified(), meta.contentType());
             cache.put(cacheKey, result);
             return result;
         } catch (Exception e) {
@@ -107,20 +112,21 @@ public class BrowserTools {
         try {
             String cacheKey = ToolCache.key(bucketName, "read", fileKey);
             String cached = cache.get(cacheKey);
-            if (cached != null) return "[cached] " + cached;
+            if (cached != null) {
+                progress("[cached] Reading %s/%s...", bucketName, fileKey);
+                return cached;
+            }
 
             FileMetadata meta = storageAdapter.getMetadata(bucketName, fileKey);
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Reading %s/%s (%s)...%n", bucketName, fileKey, formatBytes(meta.size())));
+            progress("Reading %s/%s (%s)...", bucketName, fileKey, formatBytes(meta.size()));
             byte[] content = storageAdapter.read(bucketName, fileKey);
+            String result;
             if (content.length > 4096) {
-                sb.append(String.format("Showing first 4KB of %s:%n", formatBytes(content.length)));
-                sb.append(new String(content, 0, 4096));
-                sb.append("\n... (truncated)");
+                result = String.format("Showing first 4KB of %s:%n%s%n... (truncated)",
+                        formatBytes(content.length), new String(content, 0, 4096));
             } else {
-                sb.append(new String(content));
+                result = new String(content);
             }
-            String result = sb.toString();
             cache.put(cacheKey, result);
             return result;
         } catch (Exception e) {
@@ -133,15 +139,18 @@ public class BrowserTools {
             @P("Name of the storage bucket") String bucketName,
             @P("Key (path) of the file to delete") String fileKey) {
         try {
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Deleting %s/%s...%n", bucketName, fileKey));
+            progress("Deleting %s/%s...", bucketName, fileKey);
             storageAdapter.delete(bucketName, fileKey);
-            sb.append(String.format("Done. Deleted %s/%s", bucketName, fileKey));
-            cache.invalidate(bucketName); // invalidate all cached data for this bucket
-            return sb.toString();
+            cache.invalidate(bucketName);
+            return String.format("Deleted %s/%s", bucketName, fileKey);
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
+    }
+
+    private static void progress(String format, Object... args) {
+        System.out.printf("  >> " + format + "%n", args);
+        System.out.flush();
     }
 
     private String formatBytes(long bytes) {

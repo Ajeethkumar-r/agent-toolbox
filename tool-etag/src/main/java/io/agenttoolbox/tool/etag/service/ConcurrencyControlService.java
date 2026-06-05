@@ -18,21 +18,12 @@ public class ConcurrencyControlService {
 
     public String update(String bucketName, String fileKey, String localFilePath, String knownEtag) {
         try {
-            Path path = Path.of(localFilePath);
-            byte[] content = Files.readAllBytes(path);
-
-            StringBuilder out = new StringBuilder();
-            out.append(String.format("Updating %s/%s with %s...%n", bucketName, fileKey, path.getFileName()));
-            out.append(String.format("  Checking ETag: %s%n", knownEtag));
-
+            byte[] content = Files.readAllBytes(Path.of(localFilePath));
             FileMetadata metadata = storageAdapter.conditionalWrite(bucketName, fileKey, content, knownEtag);
-
-            out.append(String.format("  ETag matched. Write complete.%n"));
-            out.append(String.format("Done. Updated %s/%s. New ETag: %s", bucketName, fileKey, metadata.etag()));
-            return out.toString();
+            return String.format("Updated %s/%s. New ETag: %s", bucketName, fileKey, metadata.etag());
         } catch (PreconditionFailedException e) {
-            return String.format("Updating %s/%s...%n  Checking ETag: %s%n  CONFLICT — file was modified by another process.%n  Your ETag: %s%n  Current ETag: %s",
-                    bucketName, fileKey, knownEtag, e.getExpectedEtag(), e.getCurrentEtag());
+            return String.format("CONFLICT — %s/%s was modified. Your ETag: %s, Current ETag: %s",
+                    bucketName, fileKey, e.getExpectedEtag(), e.getCurrentEtag());
         } catch (IOException e) {
             throw new RuntimeException("Failed to read local file: " + localFilePath, e);
         }

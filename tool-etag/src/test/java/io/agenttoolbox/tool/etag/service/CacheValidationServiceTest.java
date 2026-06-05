@@ -33,7 +33,6 @@ class CacheValidationServiceTest {
 
         assertThat(result).contains("NOT MODIFIED");
         assertThat(result).contains("my-bucket/doc.txt");
-        assertThat(result).contains("has not changed");
         assertThat(result).contains("0 bytes transferred");
     }
 
@@ -50,7 +49,6 @@ class CacheValidationServiceTest {
 
         assertThat(result).contains("MODIFIED");
         assertThat(result).contains("my-bucket/doc.txt");
-        assertThat(result).contains("has changed");
         assertThat(result).containsIgnoringCase("transferred");
     }
 }

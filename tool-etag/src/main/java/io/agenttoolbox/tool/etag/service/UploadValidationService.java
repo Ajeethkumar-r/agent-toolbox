@@ -28,20 +28,13 @@ public class UploadValidationService {
                 destinationKey = path.getFileName().toString();
             }
 
-            StringBuilder out = new StringBuilder();
-            out.append(String.format("Uploading %s (%s) to %s/%s...%n",
-                    path.getFileName(), formatBytes(content.length), bucketName, destinationKey));
-            out.append(String.format("  Computing MD5: %s%n", md5));
-
             FileMetadata metadata = storageAdapter.write(bucketName, destinationKey, content, md5);
 
-            out.append(String.format("  MD5 verified. Upload complete.%n"));
-            out.append(String.format("Done. Uploaded %s/%s (%s, ETag: %s)",
-                    bucketName, destinationKey, formatBytes(metadata.size()), metadata.md5Hash()));
-            return out.toString();
+            return String.format("Uploaded %s/%s (%s, MD5 verified: %s)",
+                    bucketName, destinationKey, formatBytes(metadata.size()), metadata.md5Hash());
         } catch (HashMismatchException e) {
-            return String.format("Uploading %s to %s...%nREJECTED — MD5 mismatch: expected=%s, actual=%s",
-                    localFilePath, bucketName, e.getExpectedMd5(), e.getActualMd5());
+            return String.format("REJECTED — MD5 mismatch: expected=%s, actual=%s",
+                    e.getExpectedMd5(), e.getActualMd5());
         } catch (IOException e) {
             throw new RuntimeException("Failed to read local file: " + localFilePath, e);
         }

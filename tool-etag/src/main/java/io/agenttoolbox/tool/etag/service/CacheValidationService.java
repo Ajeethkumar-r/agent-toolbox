@@ -12,19 +12,13 @@ public class CacheValidationService {
     }
 
     public String validate(String bucketName, String fileKey, String knownEtag) {
-        StringBuilder out = new StringBuilder();
-        out.append(String.format("Checking %s/%s...%n", bucketName, fileKey));
-        out.append(String.format("  Known ETag: %s%n", knownEtag));
-
         ConditionalReadResult result = storageAdapter.conditionalRead(bucketName, fileKey, knownEtag);
-
-        out.append(String.format("  Current ETag: %s%n", result.etag()));
         if (!result.modified()) {
-            out.append("NOT MODIFIED — file has not changed. 0 bytes transferred.");
-        } else {
-            out.append(String.format("MODIFIED — file has changed. %s transferred.", formatBytes(result.contentLength())));
+            return String.format("NOT MODIFIED — %s/%s unchanged. ETag: %s. 0 bytes transferred.",
+                    bucketName, fileKey, result.etag());
         }
-        return out.toString();
+        return String.format("MODIFIED — %s/%s changed. New ETag: %s. %s transferred.",
+                bucketName, fileKey, result.etag(), formatBytes(result.contentLength()));
     }
 
     private String formatBytes(long bytes) {
