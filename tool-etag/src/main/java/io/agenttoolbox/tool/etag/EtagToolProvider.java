@@ -26,15 +26,13 @@ public class EtagToolProvider implements ToolProvider {
 
     @Override
     public void configure(AgentConfig config) {
-        String configRoot = config.getStorage().getLocal().getBucketRoot();
-        // Resolve ${user.home} placeholder if present
-        this.bucketRoot = configRoot.replace("${user.home}", System.getProperty("user.home"));
+        this.bucketRoot = config.getStorage().getLocal().getBucketRoot();
     }
 
     @Override
     public Object toolInstance() {
         if (bucketRoot == null) {
-            bucketRoot = Path.of(System.getProperty("user.home"), ".agent-toolbox", "buckets").toString();
+            bucketRoot = new AgentConfig().getStorage().getLocal().getBucketRoot();
         }
         LocalStorageAdapter storageAdapter = new LocalStorageAdapter(bucketRoot);
 

@@ -12,8 +12,10 @@ llm:
     timeout-seconds: 60
 storage:
   provider: local
-  local:
-    bucket-root: ${user.home}/.agent-toolbox/buckets
+  # local.bucket-root is optional. Resolution order:
+  #   1. This config value (if set)
+  #   2. AGENT_BUCKET_ROOT env var
+  #   3. Default: ~/.agent-toolbox/buckets
 output:
   verbosity: auto
   color: true

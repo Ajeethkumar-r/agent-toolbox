@@ -1,5 +1,7 @@
 package io.agenttoolbox.core.config;
 
+import java.nio.file.Path;
+
 /**
  * Root configuration POJO loaded from application.yaml.
  * Uses nested static classes so SnakeYAML can map the YAML structure directly.
@@ -94,9 +96,16 @@ public class AgentConfig {
     }
 
     public static class LocalStorageConfig {
-        private String bucketRoot = "/tmp/agent-buckets";
+        private String bucketRoot;
 
-        public String getBucketRoot() { return bucketRoot; }
+        public String getBucketRoot() {
+            // Priority: explicit config > env var > default
+            if (bucketRoot != null) return bucketRoot;
+            String envRoot = System.getenv("AGENT_BUCKET_ROOT");
+            if (envRoot != null) return envRoot;
+            return Path.of(System.getProperty("user.home"), ".agent-toolbox", "buckets").toString();
+        }
+
         public void setBucketRoot(String bucketRoot) { this.bucketRoot = bucketRoot; }
     }
 
