@@ -65,7 +65,7 @@ public class AgentConfig {
     public static class OllamaConfig {
         private String baseUrl = "http://localhost:11434";
         private String model = "llama3.1:8b";
-        private double temperature = 0.7;
+        private double temperature = 0.1;
         private int timeoutSeconds = 60;
 
         public String getBaseUrl() { return baseUrl; }

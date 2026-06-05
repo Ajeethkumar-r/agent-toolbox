@@ -1,5 +1,7 @@
 package io.agenttoolbox.core;
 
+import io.agenttoolbox.core.config.AgentConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -24,11 +26,17 @@ public class ToolRegistry {
         providers.add(provider);
     }
 
-    /** Returns tool instances from all registered providers. */
-    public List<Object> discoverTools() {
+    /** Passes config to all providers, then returns their tool instances. */
+    public List<Object> discoverTools(AgentConfig config) {
         return providers.stream()
+                .peek(p -> p.configure(config))
                 .map(ToolProvider::toolInstance)
                 .collect(Collectors.toList());
+    }
+
+    /** Returns tool instances without config (for tests). */
+    public List<Object> discoverTools() {
+        return discoverTools(new AgentConfig());
     }
 
     /** Returns names of all registered providers. */

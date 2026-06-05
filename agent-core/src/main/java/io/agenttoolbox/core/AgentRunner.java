@@ -48,7 +48,7 @@ public class AgentRunner {
             }
 
             ChatModel chatModel = ChatModelFactory.create(config, secrets);
-            List<Object> tools = toolRegistry.discoverTools();
+            List<Object> tools = toolRegistry.discoverTools(config);
 
             AiServices<AgentService> builder = AiServices.builder(AgentService.class)
                     .chatModel(chatModel)
