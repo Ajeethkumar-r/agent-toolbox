@@ -145,7 +145,7 @@ public class BrowserTools {
             progress("Deleting %s/%s...", bucketName, fileKey);
             storageAdapter.delete(bucketName, fileKey);
             cache.invalidate(bucketName);
-            return String.format("Deleted %s/%s", bucketName, fileKey);
+            return String.format("SUCCESS: file %s/%s has been deleted.", bucketName, fileKey);
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
