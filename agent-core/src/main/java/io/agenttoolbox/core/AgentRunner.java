@@ -44,7 +44,9 @@ public class AgentRunner {
 
             String provider = config.getLlm().getProvider();
             if ("ollama".equals(provider)) {
-                OllamaHealthCheck.verify(config.getLlm().getOllama().getBaseUrl());
+                OllamaHealthCheck.verify(
+                        config.getLlm().getOllama().getBaseUrl(),
+                        config.getLlm().getOllama().getHealthCheckTimeoutSeconds());
             }
 
             ChatModel chatModel = ChatModelFactory.create(config, secrets);

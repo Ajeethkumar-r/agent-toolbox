@@ -73,6 +73,7 @@ public class AgentConfig {
         private String model = "llama3.1:8b";
         private double temperature = 0.3;
         private int timeoutSeconds = 60;
+        private int healthCheckTimeoutSeconds = 5;
 
         public String getBaseUrl() { return baseUrl; }
         public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }
@@ -85,6 +86,9 @@ public class AgentConfig {
 
         public int getTimeoutSeconds() { return timeoutSeconds; }
         public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
+
+        public int getHealthCheckTimeoutSeconds() { return healthCheckTimeoutSeconds; }
+        public void setHealthCheckTimeoutSeconds(int healthCheckTimeoutSeconds) { this.healthCheckTimeoutSeconds = healthCheckTimeoutSeconds; }
     }
 
     // ── Storage section ─────────────────────────────────────────────────
@@ -101,6 +105,10 @@ public class AgentConfig {
 
     public static class LocalStorageConfig {
         private String bucketRoot;
+        private int fileReadLimitBytes = 4096;
+
+        public int getFileReadLimitBytes() { return fileReadLimitBytes; }
+        public void setFileReadLimitBytes(int fileReadLimitBytes) { this.fileReadLimitBytes = fileReadLimitBytes; }
 
         public String getBucketRoot() {
             // Priority: explicit config > env var > default

@@ -12,10 +12,12 @@ public class BrowserTools {
 
     private final StorageAdapter storageAdapter;
     private final ToolCache cache;
+    private final int fileReadLimitBytes;
 
-    public BrowserTools(StorageAdapter storageAdapter, ToolCache cache) {
+    public BrowserTools(StorageAdapter storageAdapter, ToolCache cache, int fileReadLimitBytes) {
         this.storageAdapter = storageAdapter;
         this.cache = cache;
+        this.fileReadLimitBytes = fileReadLimitBytes;
     }
 
     @Tool("List all available storage buckets")
@@ -121,9 +123,10 @@ public class BrowserTools {
             progress("Reading %s/%s (%s)...", bucketName, fileKey, formatBytes(meta.size()));
             byte[] content = storageAdapter.read(bucketName, fileKey);
             String result;
-            if (content.length > 4096) {
-                result = String.format("Showing first 4KB of %s:%n%s%n... (truncated)",
-                        formatBytes(content.length), new String(content, 0, 4096));
+            if (content.length > fileReadLimitBytes) {
+                result = String.format("Showing first %s of %s:%n%s%n... (truncated)",
+                        formatBytes(fileReadLimitBytes), formatBytes(content.length),
+                        new String(content, 0, fileReadLimitBytes));
             } else {
                 result = new String(content);
             }

@@ -11,6 +11,7 @@ public class BrowserToolProvider implements ToolProvider {
 
     private String bucketRoot;
     private ToolCache cache;
+    private int fileReadLimitBytes = 4096;
 
     @Override
     public String name() {
@@ -25,6 +26,7 @@ public class BrowserToolProvider implements ToolProvider {
     @Override
     public void configure(AgentConfig config) {
         this.bucketRoot = config.getStorage().getLocal().getBucketRoot();
+        this.fileReadLimitBytes = config.getStorage().getLocal().getFileReadLimitBytes();
         this.cache = SharedCache.get(config);
     }
 
@@ -36,6 +38,6 @@ public class BrowserToolProvider implements ToolProvider {
         if (cache == null) {
             cache = new ToolCache(Duration.ofSeconds(30));
         }
-        return new BrowserTools(new LocalStorageAdapter(bucketRoot), cache);
+        return new BrowserTools(new LocalStorageAdapter(bucketRoot), cache, fileReadLimitBytes);
     }
 }

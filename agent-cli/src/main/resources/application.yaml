@@ -10,12 +10,15 @@ llm:
     model: llama3.1:8b
     temperature: 0.3
     timeout-seconds: 60
+    health-check-timeout-seconds: 5
 storage:
   provider: local
-  # local.bucket-root is optional. Resolution order:
-  #   1. This config value (if set)
-  #   2. AGENT_BUCKET_ROOT env var
-  #   3. Default: ~/.agent-toolbox/buckets
+  local:
+    # bucket-root is optional. Resolution order:
+    #   1. This config value (if set)
+    #   2. AGENT_BUCKET_ROOT env var
+    #   3. Default: ~/.agent-toolbox/buckets
+    file-read-limit-bytes: 4096
 cache:
   enabled: true
   ttl-seconds: 30

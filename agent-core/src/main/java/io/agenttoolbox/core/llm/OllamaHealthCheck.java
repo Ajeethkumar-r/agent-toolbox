@@ -25,15 +25,15 @@ public final class OllamaHealthCheck {
      * @param baseUrl the Ollama base URL (e.g. {@code http://localhost:11434})
      * @throws LlmUnavailableException if Ollama is not reachable
      */
-    public static void verify(String baseUrl) {
+    public static void verify(String baseUrl, int timeoutSeconds) {
         try {
             HttpClient client = HttpClient.newBuilder()
-                    .connectTimeout(Duration.ofSeconds(5))
+                    .connectTimeout(Duration.ofSeconds(timeoutSeconds))
                     .build();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl + "/api/tags"))
                     .GET()
-                    .timeout(Duration.ofSeconds(5))
+                    .timeout(Duration.ofSeconds(timeoutSeconds))
                     .build();
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
