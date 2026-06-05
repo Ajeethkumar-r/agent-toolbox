@@ -28,15 +28,28 @@ public class UploadValidationService {
                 destinationKey = path.getFileName().toString();
             }
 
+            StringBuilder out = new StringBuilder();
+            out.append(String.format("Uploading %s (%s) to %s/%s...%n",
+                    path.getFileName(), formatBytes(content.length), bucketName, destinationKey));
+            out.append(String.format("  Computing MD5: %s%n", md5));
+
             FileMetadata metadata = storageAdapter.write(bucketName, destinationKey, content, md5);
 
-            return String.format("Uploaded %s to %s/%s (%d bytes, MD5 verified: %s)",
-                    path.getFileName(), bucketName, destinationKey, metadata.size(), metadata.md5Hash());
+            out.append(String.format("  MD5 verified. Upload complete.%n"));
+            out.append(String.format("Done. Uploaded %s/%s (%s, ETag: %s)",
+                    bucketName, destinationKey, formatBytes(metadata.size()), metadata.md5Hash()));
+            return out.toString();
         } catch (HashMismatchException e) {
-            return String.format("Upload REJECTED — MD5 mismatch for %s: expected=%s, actual=%s",
-                    destinationKey, e.getExpectedMd5(), e.getActualMd5());
+            return String.format("Uploading %s to %s...%nREJECTED — MD5 mismatch: expected=%s, actual=%s",
+                    localFilePath, bucketName, e.getExpectedMd5(), e.getActualMd5());
         } catch (IOException e) {
             throw new RuntimeException("Failed to read local file: " + localFilePath, e);
         }
+    }
+
+    private String formatBytes(long bytes) {
+        if (bytes < 1024) return bytes + "B";
+        if (bytes < 1024 * 1024) return String.format("%.1fKB", bytes / 1024.0);
+        return String.format("%.1fMB", bytes / (1024.0 * 1024.0));
     }
 }

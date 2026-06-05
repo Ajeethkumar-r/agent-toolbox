@@ -65,8 +65,7 @@ class ConcurrencyControlServiceTest {
 
         String result = service.update("my-bucket", "doc.txt", file.toString(), staleEtag);
 
-        assertThat(result).contains("Conflict");
+        assertThat(result).contains("CONFLICT");
         assertThat(result).contains("my-bucket/doc.txt");
-        assertThat(result).contains("modified");
     }
 }

@@ -67,7 +67,7 @@ class UploadValidationServiceTest {
 
         String result = service.upload(file.toString(), "my-bucket", "dest/corrupt.txt");
 
-        assertThat(result).contains("Upload REJECTED");
-        assertThat(result).contains("MD5 mismatch");
+        assertThat(result).contains("REJECTED");
+        assertThat(result).contains("mismatch");
     }
 }

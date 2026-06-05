@@ -18,11 +18,13 @@ public class BrowserTools {
     @Tool("List all available storage buckets")
     public String listBuckets() {
         try {
+            StringBuilder sb = new StringBuilder("Listing buckets...\n");
             List<String> buckets = storageAdapter.listBuckets();
             if (buckets.isEmpty()) {
-                return "No buckets found.";
+                sb.append("No buckets found.");
+                return sb.toString();
             }
-            StringBuilder sb = new StringBuilder("Buckets:\n");
+            sb.append(String.format("Found %d bucket(s):%n", buckets.size()));
             for (String bucket : buckets) {
                 sb.append(String.format("  - %s%n", bucket));
             }
@@ -38,11 +40,15 @@ public class BrowserTools {
             @P("Optional prefix to filter files, use empty string for all files") String prefix) {
         try {
             if (prefix == null) prefix = "";
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Listing files in %s%s...%n",
+                    bucketName, prefix.isEmpty() ? "" : " (prefix: " + prefix + ")"));
             List<FileMetadata> files = storageAdapter.list(bucketName, prefix);
             if (files.isEmpty()) {
-                return "No files found in " + bucketName + (prefix.isEmpty() ? "" : " with prefix " + prefix);
+                sb.append("No files found.");
+                return sb.toString();
             }
-            StringBuilder sb = new StringBuilder(String.format("Files in %s (%d):%n", bucketName, files.size()));
+            sb.append(String.format("Found %d file(s):%n", files.size()));
             for (FileMetadata meta : files) {
                 sb.append(String.format("  %-40s %8s  ETag: %s%n",
                         meta.key(), formatBytes(meta.size()), meta.etag()));
@@ -58,13 +64,16 @@ public class BrowserTools {
             @P("Name of the storage bucket") String bucketName,
             @P("Key (path) of the file in the bucket") String fileKey) {
         try {
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Fetching metadata for %s/%s...%n", bucketName, fileKey));
             FileMetadata meta = storageAdapter.getMetadata(bucketName, fileKey);
-            return String.format(
-                    "File: %s/%s%n  Size: %s (%d bytes)%n  MD5: %s%n  ETag: %s%n  Last Modified: %s%n  Content Type: %s",
-                    meta.bucket(), meta.key(),
-                    formatBytes(meta.size()), meta.size(),
-                    meta.md5Hash(), meta.etag(),
-                    meta.lastModified(), meta.contentType());
+            sb.append(String.format("File: %s/%s%n", meta.bucket(), meta.key()));
+            sb.append(String.format("  Size:          %s (%d bytes)%n", formatBytes(meta.size()), meta.size()));
+            sb.append(String.format("  MD5:           %s%n", meta.md5Hash()));
+            sb.append(String.format("  ETag:          %s%n", meta.etag()));
+            sb.append(String.format("  Last Modified: %s%n", meta.lastModified()));
+            sb.append(String.format("  Content Type:  %s", meta.contentType()));
+            return sb.toString();
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -75,13 +84,18 @@ public class BrowserTools {
             @P("Name of the storage bucket") String bucketName,
             @P("Key (path) of the file in the bucket") String fileKey) {
         try {
+            FileMetadata meta = storageAdapter.getMetadata(bucketName, fileKey);
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Reading %s/%s (%s)...%n", bucketName, fileKey, formatBytes(meta.size())));
             byte[] content = storageAdapter.read(bucketName, fileKey);
             if (content.length > 4096) {
-                return String.format("File %s/%s is %s. Showing first 4KB:%n%s%n... (truncated)",
-                        bucketName, fileKey, formatBytes(content.length),
-                        new String(content, 0, 4096));
+                sb.append(String.format("Showing first 4KB of %s:%n", formatBytes(content.length)));
+                sb.append(new String(content, 0, 4096));
+                sb.append("\n... (truncated)");
+            } else {
+                sb.append(new String(content));
             }
-            return new String(content);
+            return sb.toString();
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -92,8 +106,11 @@ public class BrowserTools {
             @P("Name of the storage bucket") String bucketName,
             @P("Key (path) of the file to delete") String fileKey) {
         try {
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Deleting %s/%s...%n", bucketName, fileKey));
             storageAdapter.delete(bucketName, fileKey);
-            return String.format("Deleted %s/%s", bucketName, fileKey);
+            sb.append(String.format("Done. Deleted %s/%s", bucketName, fileKey));
+            return sb.toString();
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }

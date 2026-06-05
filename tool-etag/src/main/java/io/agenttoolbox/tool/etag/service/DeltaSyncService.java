@@ -28,6 +28,7 @@ public class DeltaSyncService {
         try (Stream<Path> walk = Files.walk(localDir)) {
             var files = walk.filter(Files::isRegularFile).toList();
             total = files.size();
+            log.append(String.format("Syncing %s to %s (%d files)...%n", localPath, bucketName, total));
 
             for (Path file : files) {
                 String key = localDir.relativize(file).toString().replace('\\', '/');
