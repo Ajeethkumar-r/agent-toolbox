@@ -1,12 +1,16 @@
 package io.agenttoolbox.tool.etag;
 
+import io.agenttoolbox.common.cache.ToolCache;
 import io.agenttoolbox.core.ToolProvider;
 import io.agenttoolbox.core.config.AgentConfig;
 import io.agenttoolbox.tool.etag.storage.LocalStorageAdapter;
 
+import java.time.Duration;
+
 public class BrowserToolProvider implements ToolProvider {
 
     private String bucketRoot;
+    private ToolCache cache;
 
     @Override
     public String name() {
@@ -21,6 +25,7 @@ public class BrowserToolProvider implements ToolProvider {
     @Override
     public void configure(AgentConfig config) {
         this.bucketRoot = config.getStorage().getLocal().getBucketRoot();
+        this.cache = SharedCache.get(config);
     }
 
     @Override
@@ -28,6 +33,9 @@ public class BrowserToolProvider implements ToolProvider {
         if (bucketRoot == null) {
             bucketRoot = new AgentConfig().getStorage().getLocal().getBucketRoot();
         }
-        return new BrowserTools(new LocalStorageAdapter(bucketRoot));
+        if (cache == null) {
+            cache = new ToolCache(Duration.ofSeconds(30));
+        }
+        return new BrowserTools(new LocalStorageAdapter(bucketRoot), cache);
     }
 }

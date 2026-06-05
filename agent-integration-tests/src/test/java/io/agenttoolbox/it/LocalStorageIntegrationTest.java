@@ -23,8 +23,9 @@ class LocalStorageIntegrationTest {
     @BeforeEach
     void setUp() {
         LocalStorageAdapter storage = new LocalStorageAdapter(bucketRoot.toString());
+        io.agenttoolbox.common.cache.ToolCache cache = new io.agenttoolbox.common.cache.ToolCache(java.time.Duration.ofSeconds(30));
         tools = new EtagTools(new DeltaSyncService(storage), new UploadValidationService(storage),
-                new ConcurrencyControlService(storage), new CacheValidationService(storage));
+                new ConcurrencyControlService(storage), new CacheValidationService(storage), cache);
     }
 
     @Test

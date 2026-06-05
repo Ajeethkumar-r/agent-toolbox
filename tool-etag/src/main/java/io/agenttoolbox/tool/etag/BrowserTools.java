@@ -2,6 +2,7 @@ package io.agenttoolbox.tool.etag;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
+import io.agenttoolbox.common.cache.ToolCache;
 import io.agenttoolbox.common.model.FileMetadata;
 import io.agenttoolbox.common.storage.StorageAdapter;
 
@@ -10,14 +11,20 @@ import java.util.List;
 public class BrowserTools {
 
     private final StorageAdapter storageAdapter;
+    private final ToolCache cache;
 
-    public BrowserTools(StorageAdapter storageAdapter) {
+    public BrowserTools(StorageAdapter storageAdapter, ToolCache cache) {
         this.storageAdapter = storageAdapter;
+        this.cache = cache;
     }
 
     @Tool("List all available storage buckets")
     public String listBuckets() {
         try {
+            String cacheKey = "buckets";
+            String cached = cache.get(cacheKey);
+            if (cached != null) return "[cached] " + cached;
+
             StringBuilder sb = new StringBuilder("Listing buckets...\n");
             List<String> buckets = storageAdapter.listBuckets();
             if (buckets.isEmpty()) {
@@ -28,7 +35,9 @@ public class BrowserTools {
             for (String bucket : buckets) {
                 sb.append(String.format("  - %s%n", bucket));
             }
-            return sb.toString().stripTrailing();
+            String result = sb.toString().stripTrailing();
+            cache.put(cacheKey, result);
+            return result;
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -40,6 +49,10 @@ public class BrowserTools {
             @P("Optional prefix to filter files, use empty string for all files") String prefix) {
         try {
             if (prefix == null) prefix = "";
+            String cacheKey = ToolCache.key(bucketName, "files", prefix);
+            String cached = cache.get(cacheKey);
+            if (cached != null) return "[cached] " + cached;
+
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("Listing files in %s%s...%n",
                     bucketName, prefix.isEmpty() ? "" : " (prefix: " + prefix + ")"));
@@ -53,7 +66,9 @@ public class BrowserTools {
                 sb.append(String.format("  %-40s %8s  ETag: %s%n",
                         meta.key(), formatBytes(meta.size()), meta.etag()));
             }
-            return sb.toString().stripTrailing();
+            String result = sb.toString().stripTrailing();
+            cache.put(cacheKey, result);
+            return result;
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -64,6 +79,10 @@ public class BrowserTools {
             @P("Name of the storage bucket") String bucketName,
             @P("Key (path) of the file in the bucket") String fileKey) {
         try {
+            String cacheKey = ToolCache.key(bucketName, "info", fileKey);
+            String cached = cache.get(cacheKey);
+            if (cached != null) return "[cached] " + cached;
+
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("Fetching metadata for %s/%s...%n", bucketName, fileKey));
             FileMetadata meta = storageAdapter.getMetadata(bucketName, fileKey);
@@ -73,7 +92,9 @@ public class BrowserTools {
             sb.append(String.format("  ETag:          %s%n", meta.etag()));
             sb.append(String.format("  Last Modified: %s%n", meta.lastModified()));
             sb.append(String.format("  Content Type:  %s", meta.contentType()));
-            return sb.toString();
+            String result = sb.toString();
+            cache.put(cacheKey, result);
+            return result;
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -84,6 +105,10 @@ public class BrowserTools {
             @P("Name of the storage bucket") String bucketName,
             @P("Key (path) of the file in the bucket") String fileKey) {
         try {
+            String cacheKey = ToolCache.key(bucketName, "read", fileKey);
+            String cached = cache.get(cacheKey);
+            if (cached != null) return "[cached] " + cached;
+
             FileMetadata meta = storageAdapter.getMetadata(bucketName, fileKey);
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("Reading %s/%s (%s)...%n", bucketName, fileKey, formatBytes(meta.size())));
@@ -95,7 +120,9 @@ public class BrowserTools {
             } else {
                 sb.append(new String(content));
             }
-            return sb.toString();
+            String result = sb.toString();
+            cache.put(cacheKey, result);
+            return result;
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -110,6 +137,7 @@ public class BrowserTools {
             sb.append(String.format("Deleting %s/%s...%n", bucketName, fileKey));
             storageAdapter.delete(bucketName, fileKey);
             sb.append(String.format("Done. Deleted %s/%s", bucketName, fileKey));
+            cache.invalidate(bucketName); // invalidate all cached data for this bucket
             return sb.toString();
         } catch (Exception e) {
             return "Error: " + e.getMessage();

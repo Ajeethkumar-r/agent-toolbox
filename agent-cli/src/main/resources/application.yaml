@@ -16,6 +16,9 @@ storage:
   #   1. This config value (if set)
   #   2. AGENT_BUCKET_ROOT env var
   #   3. Default: ~/.agent-toolbox/buckets
+cache:
+  enabled: true
+  ttl-seconds: 30
 output:
   verbosity: auto
   color: true

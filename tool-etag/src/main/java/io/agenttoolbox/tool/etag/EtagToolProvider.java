@@ -1,5 +1,6 @@
 package io.agenttoolbox.tool.etag;
 
+import io.agenttoolbox.common.cache.ToolCache;
 import io.agenttoolbox.core.ToolProvider;
 import io.agenttoolbox.core.config.AgentConfig;
 import io.agenttoolbox.tool.etag.service.CacheValidationService;
@@ -8,11 +9,12 @@ import io.agenttoolbox.tool.etag.service.DeltaSyncService;
 import io.agenttoolbox.tool.etag.service.UploadValidationService;
 import io.agenttoolbox.tool.etag.storage.LocalStorageAdapter;
 
-import java.nio.file.Path;
+import java.time.Duration;
 
 public class EtagToolProvider implements ToolProvider {
 
     private String bucketRoot;
+    private ToolCache cache;
 
     @Override
     public String name() {
@@ -27,6 +29,7 @@ public class EtagToolProvider implements ToolProvider {
     @Override
     public void configure(AgentConfig config) {
         this.bucketRoot = config.getStorage().getLocal().getBucketRoot();
+        this.cache = SharedCache.get(config);
     }
 
     @Override
@@ -34,13 +37,16 @@ public class EtagToolProvider implements ToolProvider {
         if (bucketRoot == null) {
             bucketRoot = new AgentConfig().getStorage().getLocal().getBucketRoot();
         }
+        if (cache == null) {
+            cache = new ToolCache(Duration.ofSeconds(30));
+        }
         LocalStorageAdapter storageAdapter = new LocalStorageAdapter(bucketRoot);
 
-        DeltaSyncService deltaSyncService = new DeltaSyncService(storageAdapter);
-        UploadValidationService uploadValidationService = new UploadValidationService(storageAdapter);
-        ConcurrencyControlService concurrencyControlService = new ConcurrencyControlService(storageAdapter);
-        CacheValidationService cacheValidationService = new CacheValidationService(storageAdapter);
-
-        return new EtagTools(deltaSyncService, uploadValidationService, concurrencyControlService, cacheValidationService);
+        return new EtagTools(
+                new DeltaSyncService(storageAdapter),
+                new UploadValidationService(storageAdapter),
+                new ConcurrencyControlService(storageAdapter),
+                new CacheValidationService(storageAdapter),
+                cache);
     }
 }

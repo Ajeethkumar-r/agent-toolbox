@@ -2,6 +2,7 @@ package io.agenttoolbox.tool.etag;
 
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
+import io.agenttoolbox.common.cache.ToolCache;
 import io.agenttoolbox.tool.etag.service.CacheValidationService;
 import io.agenttoolbox.tool.etag.service.ConcurrencyControlService;
 import io.agenttoolbox.tool.etag.service.DeltaSyncService;
@@ -13,15 +14,18 @@ public class EtagTools {
     private final UploadValidationService uploadValidationService;
     private final ConcurrencyControlService concurrencyControlService;
     private final CacheValidationService cacheValidationService;
+    private final ToolCache cache;
 
     public EtagTools(DeltaSyncService deltaSyncService,
                      UploadValidationService uploadValidationService,
                      ConcurrencyControlService concurrencyControlService,
-                     CacheValidationService cacheValidationService) {
+                     CacheValidationService cacheValidationService,
+                     ToolCache cache) {
         this.deltaSyncService = deltaSyncService;
         this.uploadValidationService = uploadValidationService;
         this.concurrencyControlService = concurrencyControlService;
         this.cacheValidationService = cacheValidationService;
+        this.cache = cache;
     }
 
     @Tool("Sync a local directory to a storage bucket, uploading only changed files based on MD5 comparison")
@@ -29,7 +33,9 @@ public class EtagTools {
             @P("Absolute path to the local directory to sync") String localPath,
             @P("Name of the target storage bucket") String bucketName) {
         try {
-            return deltaSyncService.sync(localPath, bucketName);
+            String result = deltaSyncService.sync(localPath, bucketName);
+            cache.invalidate(bucketName);
+            return result;
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -41,7 +47,9 @@ public class EtagTools {
             @P("Name of the target storage bucket") String bucketName,
             @P("Destination key (path) in the bucket") String destinationKey) {
         try {
-            return uploadValidationService.upload(localFilePath, bucketName, destinationKey);
+            String result = uploadValidationService.upload(localFilePath, bucketName, destinationKey);
+            cache.invalidate(bucketName);
+            return result;
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }
@@ -54,7 +62,9 @@ public class EtagTools {
             @P("Absolute path to the local file with updated content") String localFilePath,
             @P("The ETag value from the last known version of the file") String knownEtag) {
         try {
-            return concurrencyControlService.update(bucketName, fileKey, localFilePath, knownEtag);
+            String result = concurrencyControlService.update(bucketName, fileKey, localFilePath, knownEtag);
+            cache.invalidate(bucketName);
+            return result;
         } catch (Exception e) {
             return "Error: " + e.getMessage();
         }

@@ -11,6 +11,7 @@ public class AgentConfig {
     private AgentSection agent = new AgentSection();
     private LlmSection llm = new LlmSection();
     private StorageSection storage = new StorageSection();
+    private CacheSection cache = new CacheSection();
     private OutputSection output = new OutputSection();
     private LoggingSection logging = new LoggingSection();
 
@@ -22,6 +23,9 @@ public class AgentConfig {
 
     public StorageSection getStorage() { return storage; }
     public void setStorage(StorageSection storage) { this.storage = storage; }
+
+    public CacheSection getCache() { return cache; }
+    public void setCache(CacheSection cache) { this.cache = cache; }
 
     public OutputSection getOutput() { return output; }
     public void setOutput(OutputSection output) { this.output = output; }
@@ -107,6 +111,18 @@ public class AgentConfig {
         }
 
         public void setBucketRoot(String bucketRoot) { this.bucketRoot = bucketRoot; }
+    }
+
+    // ── Cache section ───────────────────────────────────────────────────
+    public static class CacheSection {
+        private boolean enabled = true;
+        private int ttlSeconds = 30;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+
+        public int getTtlSeconds() { return ttlSeconds; }
+        public void setTtlSeconds(int ttlSeconds) { this.ttlSeconds = ttlSeconds; }
     }
 
     // ── Output section ──────────────────────────────────────────────────
