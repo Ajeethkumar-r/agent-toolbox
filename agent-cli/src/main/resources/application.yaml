@@ -2,7 +2,7 @@ agent:
   name: Agent Toolbox
   version: 0.1.0
   memory:
-    max-messages: 20
+    max-tokens: 4000
 llm:
   provider: ollama
   ollama:

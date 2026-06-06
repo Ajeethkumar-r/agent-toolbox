@@ -55,7 +55,7 @@ public class AgentRunner {
             AiServices<AgentService> builder = AiServices.builder(AgentService.class)
                     .chatModel(chatModel)
                     .chatMemory(MessageWindowChatMemory.withMaxMessages(
-                            config.getAgent().getMemory().getMaxMessages()));
+                            config.getAgent().getMemory().getMaxTokens()));
 
             if (!tools.isEmpty()) {
                 builder.tools(tools);

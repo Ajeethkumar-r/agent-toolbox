@@ -14,7 +14,8 @@ class ConfigLoaderTest {
         AgentConfig config = ConfigLoader.load(is);
         assertThat(config.getAgent().getName()).isEqualTo("Test Agent");
         assertThat(config.getAgent().getVersion()).isEqualTo("0.0.1");
-        assertThat(config.getAgent().getMemory().getMaxMessages()).isEqualTo(10);
+        assertThat(config.getAgent().getMemory().getMaxTokens()).isEqualTo(2000);
+        assertThat(config.getAgent().getMemory().getStoragePath()).isEqualTo("/tmp/test-memory");
     }
 
     @Test

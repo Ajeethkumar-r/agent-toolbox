@@ -50,10 +50,17 @@ public class AgentConfig {
     }
 
     public static class MemoryConfig {
-        private int maxMessages = 20;
+        private int maxTokens = 4000;
+        private String storagePath;
 
-        public int getMaxMessages() { return maxMessages; }
-        public void setMaxMessages(int maxMessages) { this.maxMessages = maxMessages; }
+        public int getMaxTokens() { return maxTokens; }
+        public void setMaxTokens(int maxTokens) { this.maxTokens = maxTokens; }
+
+        public String getStoragePath() {
+            if (storagePath != null) return storagePath;
+            return Path.of(System.getProperty("user.home"), ".agent-toolbox").toString();
+        }
+        public void setStoragePath(String storagePath) { this.storagePath = storagePath; }
     }
 
     // ── LLM section ─────────────────────────────────────────────────────

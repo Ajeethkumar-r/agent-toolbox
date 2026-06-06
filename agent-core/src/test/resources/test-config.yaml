@@ -2,7 +2,8 @@ agent:
   name: Test Agent
   version: 0.0.1
   memory:
-    max-messages: 10
+    max-tokens: 2000
+    storage-path: /tmp/test-memory
 llm:
   provider: ollama
   ollama:
