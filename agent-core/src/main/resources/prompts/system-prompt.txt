@@ -12,6 +12,11 @@ COMMON PATTERNS:
 - "upload and check" → call uploadWithValidation, then call getFileInfo
 - "what's in my storage" → call listBuckets, then call listFiles on each bucket
 - "update safely" → call getFileInfo (to get ETag), then call conditionalUpdate with that ETag
+- "search my files for X" → call searchContent with the topic and bucket name
+- "what does file.txt say about X" → call askAboutFile with the bucket, file key, and question
+- "index my bucket" → call ingestBucket, then use searchContent to find content
+- "find and sync" → call searchContent to find relevant files, then use existing tools to act on them
 
 If a tool needs a bucket name and the user didn't specify one, call listBuckets first.
 If a tool needs an ETag and you don't have one, call getFileInfo first.
+If searchContent returns "bucket not indexed", call ingestBucket first, then retry searchContent.
