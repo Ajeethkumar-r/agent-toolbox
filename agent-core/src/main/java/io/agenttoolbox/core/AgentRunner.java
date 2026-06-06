@@ -24,6 +24,7 @@ import java.util.List;
 public class AgentRunner {
 
     private static final Logger log = LoggerFactory.getLogger(AgentRunner.class);
+    private static final int MAX_INPUT_CHARS = 16_000; // ~4,000 tokens (chars / 4)
 
     private final AgentConfig config;
     private final SecretProvider secrets;
@@ -84,6 +85,10 @@ public class AgentRunner {
      */
     public AgentResponse chat(String userMessage) {
         try {
+            if (userMessage != null && userMessage.length() > MAX_INPUT_CHARS) {
+                return AgentResponse.error("Message too long. Maximum length is ~4,000 tokens ("
+                        + MAX_INPUT_CHARS + " characters). Please shorten your message.");
+            }
             initialize();
             String reply = agentService.chat(userMessage);
             return AgentResponse.ok(reply);
