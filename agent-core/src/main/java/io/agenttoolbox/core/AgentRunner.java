@@ -1,16 +1,20 @@
 package io.agenttoolbox.core;
 
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.TokenWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 import io.agenttoolbox.common.config.SecretProvider;
 import io.agenttoolbox.core.config.AgentConfig;
 import io.agenttoolbox.core.llm.ChatModelFactory;
 import io.agenttoolbox.core.llm.OllamaHealthCheck;
+import io.agenttoolbox.core.memory.FileChatMemoryStore;
+import io.agenttoolbox.core.memory.HeuristicTokenEstimator;
 import io.agenttoolbox.core.model.AgentResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -26,6 +30,7 @@ public class AgentRunner {
     private final ToolRegistry toolRegistry;
 
     private volatile AgentService agentService;
+    private volatile ChatMemory chatMemory;
     private volatile boolean initialized;
 
     public AgentRunner(AgentConfig config, SecretProvider secrets, ToolRegistry toolRegistry) {
@@ -52,10 +57,16 @@ public class AgentRunner {
             ChatModel chatModel = ChatModelFactory.create(config, secrets);
             List<Object> tools = toolRegistry.discoverTools(config);
 
+            chatMemory = TokenWindowChatMemory.builder()
+                    .id("default")
+                    .maxTokens(config.getAgent().getMemory().getMaxTokens(), new HeuristicTokenEstimator())
+                    .chatMemoryStore(new FileChatMemoryStore(
+                            Path.of(config.getAgent().getMemory().getStoragePath())))
+                    .build();
+
             AiServices<AgentService> builder = AiServices.builder(AgentService.class)
                     .chatModel(chatModel)
-                    .chatMemory(MessageWindowChatMemory.withMaxMessages(
-                            config.getAgent().getMemory().getMaxTokens()));
+                    .chatMemory(chatMemory);
 
             if (!tools.isEmpty()) {
                 builder.tools(tools);
@@ -79,6 +90,13 @@ public class AgentRunner {
         } catch (Exception e) {
             log.error("Chat failed: {}", e.getMessage(), e);
             return AgentResponse.error(e.getMessage());
+        }
+    }
+
+    /** Clears chat memory (both in-memory and persisted). */
+    public void clearMemory() {
+        if (chatMemory != null) {
+            chatMemory.clear();
         }
     }
 
