@@ -25,3 +25,4 @@ secrets.json
 *.pem
 *.key
 .agent-toolbox/
+.superpowers/
