@@ -73,8 +73,13 @@ public class AgentCli implements Callable<Integer> {
                 if (input.isEmpty()) continue;
                 if ("help".equalsIgnoreCase(input)) {
                     System.out.println("Available tools: " + runner.getToolNames());
-                    System.out.println("Commands: help, quit/exit");
+                    System.out.println("Commands: help, clear, quit/exit");
                     System.out.println("Describe your file storage problem in natural language.\n");
+                    continue;
+                }
+                if ("clear".equalsIgnoreCase(input)) {
+                    runner.clearMemory();
+                    System.out.println("Chat memory cleared.\n");
                     continue;
                 }
                 AgentResponse response = runner.chat(input);
