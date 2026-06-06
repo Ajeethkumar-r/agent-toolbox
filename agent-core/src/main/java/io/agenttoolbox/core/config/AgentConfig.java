@@ -71,12 +71,16 @@ public class AgentConfig {
     public static class LlmSection {
         private String provider = "ollama";
         private OllamaConfig ollama = new OllamaConfig();
+        private GeminiConfig gemini = new GeminiConfig();
 
         public String getProvider() { return provider; }
         public void setProvider(String provider) { this.provider = provider; }
 
         public OllamaConfig getOllama() { return ollama; }
         public void setOllama(OllamaConfig ollama) { this.ollama = ollama; }
+
+        public GeminiConfig getGemini() { return gemini; }
+        public void setGemini(GeminiConfig gemini) { this.gemini = gemini; }
     }
 
     public static class OllamaConfig {
@@ -100,6 +104,25 @@ public class AgentConfig {
 
         public int getHealthCheckTimeoutSeconds() { return healthCheckTimeoutSeconds; }
         public void setHealthCheckTimeoutSeconds(int healthCheckTimeoutSeconds) { this.healthCheckTimeoutSeconds = healthCheckTimeoutSeconds; }
+    }
+
+    public static class GeminiConfig {
+        private String model = "gemini-2.0-flash";
+        private double temperature = 0.3;
+        private int timeoutSeconds = 60;
+        private int maxOutputTokens = 4096;
+
+        public String getModel() { return model; }
+        public void setModel(String model) { this.model = model; }
+
+        public double getTemperature() { return temperature; }
+        public void setTemperature(double temperature) { this.temperature = temperature; }
+
+        public int getTimeoutSeconds() { return timeoutSeconds; }
+        public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
+
+        public int getMaxOutputTokens() { return maxOutputTokens; }
+        public void setMaxOutputTokens(int maxOutputTokens) { this.maxOutputTokens = maxOutputTokens; }
     }
 
     // ── Storage section ─────────────────────────────────────────────────

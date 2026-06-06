@@ -5,6 +5,11 @@ agent:
     max-tokens: 4000
 llm:
   provider: ollama
+  gemini:
+    model: gemini-2.0-flash
+    temperature: 0.3
+    timeout-seconds: 60
+    max-output-tokens: 4096
   ollama:
     base-url: http://localhost:11434
     model: llama3.1:8b
