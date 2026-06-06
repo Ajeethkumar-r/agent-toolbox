@@ -14,6 +14,7 @@ public class AgentConfig {
     private CacheSection cache = new CacheSection();
     private OutputSection output = new OutputSection();
     private LoggingSection logging = new LoggingSection();
+    private EmbeddingSection embedding = new EmbeddingSection();
 
     public AgentSection getAgent() { return agent; }
     public void setAgent(AgentSection agent) { this.agent = agent; }
@@ -32,6 +33,9 @@ public class AgentConfig {
 
     public LoggingSection getLogging() { return logging; }
     public void setLogging(LoggingSection logging) { this.logging = logging; }
+
+    public EmbeddingSection getEmbedding() { return embedding; }
+    public void setEmbedding(EmbeddingSection embedding) { this.embedding = embedding; }
 
     // ── Agent section ───────────────────────────────────────────────────
     public static class AgentSection {
@@ -158,5 +162,47 @@ public class AgentConfig {
 
         public String getLevel() { return level; }
         public void setLevel(String level) { this.level = level; }
+    }
+
+    // ── Embedding section ──────────────────────────────────────────────────────
+    public static class EmbeddingSection {
+        private String provider = "ollama";
+        private OllamaEmbeddingConfig ollama = new OllamaEmbeddingConfig();
+        private String storePath;
+        private int chunkSize = 500;
+        private int chunkOverlap = 50;
+        private int maxResults = 3;
+        private double minScore = 0.5;
+
+        public String getProvider() { return provider; }
+        public void setProvider(String provider) { this.provider = provider; }
+
+        public OllamaEmbeddingConfig getOllama() { return ollama; }
+        public void setOllama(OllamaEmbeddingConfig ollama) { this.ollama = ollama; }
+
+        public String getStorePath() {
+            if (storePath != null) return storePath;
+            return Path.of(System.getProperty("user.home"), ".agent-toolbox", "embeddings").toString();
+        }
+        public void setStorePath(String storePath) { this.storePath = storePath; }
+
+        public int getChunkSize() { return chunkSize; }
+        public void setChunkSize(int chunkSize) { this.chunkSize = chunkSize; }
+
+        public int getChunkOverlap() { return chunkOverlap; }
+        public void setChunkOverlap(int chunkOverlap) { this.chunkOverlap = chunkOverlap; }
+
+        public int getMaxResults() { return maxResults; }
+        public void setMaxResults(int maxResults) { this.maxResults = maxResults; }
+
+        public double getMinScore() { return minScore; }
+        public void setMinScore(double minScore) { this.minScore = minScore; }
+    }
+
+    public static class OllamaEmbeddingConfig {
+        private String model = "nomic-embed-text";
+
+        public String getModel() { return model; }
+        public void setModel(String model) { this.model = model; }
     }
 }

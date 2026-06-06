@@ -20,3 +20,12 @@ output:
   color: true
 logging:
   level: INFO
+embedding:
+  provider: ollama
+  ollama:
+    model: nomic-embed-text
+  store-path: /tmp/test-embeddings
+  chunk-size: 200
+  chunk-overlap: 20
+  max-results: 3
+  min-score: 0.3

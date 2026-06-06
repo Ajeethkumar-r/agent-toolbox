@@ -27,3 +27,11 @@ output:
   color: true
 logging:
   level: INFO
+embedding:
+  provider: ollama
+  ollama:
+    model: nomic-embed-text
+  chunk-size: 500
+  chunk-overlap: 50
+  max-results: 3
+  min-score: 0.5
