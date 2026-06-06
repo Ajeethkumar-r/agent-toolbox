@@ -15,8 +15,10 @@
     <modules>
         <module>agent-common</module>
         <module>agent-core</module>
+        <module>google-auth</module>
         <module>tool-etag</module>
         <module>tool-rag</module>
+        <module>tool-drive</module>
         <module>agent-cli</module>
         <module>agent-integration-tests</module>
     </modules>
@@ -65,12 +67,22 @@
             </dependency>
             <dependency>
                 <groupId>io.agenttoolbox</groupId>
+                <artifactId>google-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.agenttoolbox</groupId>
                 <artifactId>tool-etag</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.agenttoolbox</groupId>
                 <artifactId>tool-rag</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.agenttoolbox</groupId>
+                <artifactId>tool-drive</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

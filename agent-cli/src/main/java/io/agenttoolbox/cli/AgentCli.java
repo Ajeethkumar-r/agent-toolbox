@@ -24,7 +24,7 @@ public class AgentCli implements Callable<Integer> {
     @Option(names = {"-v", "--verbose"}, description = "Always use verbose output")
     boolean verbose;
 
-    @Option(names = {"--model"}, description = "Override Ollama model name")
+    @Option(names = {"--model"}, description = "Override LLM model name")
     String model;
 
     @Option(names = {"--config"}, description = "Path to config YAML")
@@ -60,9 +60,13 @@ public class AgentCli implements Callable<Integer> {
     }
 
     private int runRepl(AgentRunner runner, OutputFormatter formatter, AgentConfig config) {
-        System.out.printf("%s v%s (Ollama: %s)%n",
+        String provider = config.getLlm().getProvider();
+        String modelName = "gemini".equals(provider)
+                ? config.getLlm().getGemini().getModel()
+                : config.getLlm().getOllama().getModel();
+        System.out.printf("%s v%s (%s: %s)%n",
                 config.getAgent().getName(), config.getAgent().getVersion(),
-                config.getLlm().getOllama().getModel());
+                provider, modelName);
         System.out.println("Type your request, or 'help' for commands. 'quit' to exit.\n");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             while (true) {
@@ -90,7 +94,14 @@ public class AgentCli implements Callable<Integer> {
     }
 
     private void applyOverrides(AgentConfig config) {
-        if (model != null) config.getLlm().getOllama().setModel(model);
+        if (model != null) {
+            String provider = config.getLlm().getProvider();
+            if ("gemini".equals(provider)) {
+                config.getLlm().getGemini().setModel(model);
+            } else {
+                config.getLlm().getOllama().setModel(model);
+            }
+        }
         if (verbose) config.getOutput().setVerbosity("verbose");
     }
 }
