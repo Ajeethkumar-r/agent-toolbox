@@ -1,6 +1,7 @@
 package io.agenttoolbox.common.error;
 
 import io.agenttoolbox.common.exception.*;
+import io.agenttoolbox.common.exception.BucketNotIndexedException;
 
 /**
  * Formats tool exceptions into structured ERROR + ACTION strings
@@ -11,6 +12,10 @@ public final class ToolErrorFormatter {
     private ToolErrorFormatter() {}
 
     public static String format(Exception e) {
+        if (e instanceof BucketNotIndexedException) {
+            return "ERROR: " + e.getMessage()
+                    + "\nACTION: Call ingestBucket to index the bucket before searching.";
+        }
         if (e instanceof BucketNotFoundException) {
             return "ERROR: " + e.getMessage()
                     + "\nACTION: Call listBuckets to see available bucket names.";

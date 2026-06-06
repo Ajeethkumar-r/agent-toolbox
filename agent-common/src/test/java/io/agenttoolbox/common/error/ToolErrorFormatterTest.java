@@ -1,11 +1,21 @@
 package io.agenttoolbox.common.error;
 
 import io.agenttoolbox.common.exception.*;
+import io.agenttoolbox.common.exception.BucketNotIndexedException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ToolErrorFormatterTest {
+
+    @Test
+    void formatsBucketNotIndexedException() {
+        BucketNotIndexedException e = new BucketNotIndexedException("my-bucket");
+        String result = ToolErrorFormatter.format(e);
+        assertThat(result).startsWith("ERROR:");
+        assertThat(result).contains("my-bucket");
+        assertThat(result).contains("ACTION: Call ingestBucket to index the bucket before searching.");
+    }
 
     @Test
     void formatsBucketNotFoundException() {
