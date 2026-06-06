@@ -3,6 +3,7 @@ package io.agenttoolbox.tool.etag;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import io.agenttoolbox.common.cache.ToolCache;
+import io.agenttoolbox.common.error.ToolErrorFormatter;
 import io.agenttoolbox.common.model.FileMetadata;
 import io.agenttoolbox.common.storage.StorageAdapter;
 
@@ -44,7 +45,7 @@ public class BrowserTools {
             cache.put(cacheKey, result);
             return result;
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
@@ -76,7 +77,7 @@ public class BrowserTools {
             cache.put(cacheKey, result);
             return result;
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
@@ -103,7 +104,7 @@ public class BrowserTools {
             cache.put(cacheKey, result);
             return result;
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
@@ -133,7 +134,7 @@ public class BrowserTools {
             cache.put(cacheKey, result);
             return result;
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
@@ -147,7 +148,7 @@ public class BrowserTools {
             cache.invalidate(bucketName);
             return String.format("SUCCESS: file %s/%s has been deleted.", bucketName, fileKey);
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 

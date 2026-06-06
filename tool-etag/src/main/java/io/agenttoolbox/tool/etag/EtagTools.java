@@ -3,6 +3,7 @@ package io.agenttoolbox.tool.etag;
 import dev.langchain4j.agent.tool.P;
 import dev.langchain4j.agent.tool.Tool;
 import io.agenttoolbox.common.cache.ToolCache;
+import io.agenttoolbox.common.error.ToolErrorFormatter;
 import io.agenttoolbox.tool.etag.service.CacheValidationService;
 import io.agenttoolbox.tool.etag.service.ConcurrencyControlService;
 import io.agenttoolbox.tool.etag.service.DeltaSyncService;
@@ -38,7 +39,7 @@ public class EtagTools {
             cache.invalidate(bucketName);
             return result;
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
@@ -54,7 +55,7 @@ public class EtagTools {
             cache.invalidate(bucketName);
             return result;
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
@@ -70,7 +71,7 @@ public class EtagTools {
             cache.invalidate(bucketName);
             return result;
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
@@ -83,7 +84,7 @@ public class EtagTools {
             progress("Checking %s/%s (ETag: %s)...", bucketName, fileKey, knownEtag);
             return cacheValidationService.validate(bucketName, fileKey, knownEtag);
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return ToolErrorFormatter.format(e);
         }
     }
 
