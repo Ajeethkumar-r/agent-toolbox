@@ -4,6 +4,8 @@ import io.agenttoolbox.api.entity.Conversation;
 import io.agenttoolbox.api.entity.Message;
 import io.agenttoolbox.api.repository.ConversationRepository;
 import io.agenttoolbox.api.repository.MessageRepository;
+import io.agenttoolbox.api.security.InputSanitizer;
+import io.agenttoolbox.api.security.OutputFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -32,16 +34,22 @@ public class ChatService {
     private final ConversationRepository conversationRepository;
     private final MessageRepository messageRepository;
     private final TransactionTemplate txTemplate;
+    private final InputSanitizer inputSanitizer;
+    private final OutputFilter outputFilter;
 
     /** Tracks active generations per user so they can be stopped on demand. */
     private final ConcurrentHashMap<UUID, AtomicBoolean> activeGenerations = new ConcurrentHashMap<>();
 
     public ChatService(ConversationRepository conversationRepository,
                        MessageRepository messageRepository,
-                       PlatformTransactionManager txManager) {
+                       PlatformTransactionManager txManager,
+                       InputSanitizer inputSanitizer,
+                       OutputFilter outputFilter) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.txTemplate = new TransactionTemplate(txManager);
+        this.inputSanitizer = inputSanitizer;
+        this.outputFilter = outputFilter;
     }
 
     /**
@@ -57,6 +65,13 @@ public class ChatService {
      * @param emitter        the SSE emitter to stream tokens through
      */
     public void streamChat(UUID userId, UUID conversationId, String userMessage, SseEmitter emitter) {
+        // 0. Sanitize input and check for prompt injection patterns
+        String sanitizedMessage = inputSanitizer.sanitize(userMessage);
+        if (inputSanitizer.containsSuspiciousPatterns(sanitizedMessage)) {
+            log.warn("Suspicious input detected from userId={}: {}", userId,
+                    sanitizedMessage.substring(0, Math.min(100, sanitizedMessage.length())));
+        }
+
         // 1. Verify conversation ownership and save user message in a short transaction
         Conversation conversation = txTemplate.execute(status -> {
             Conversation conv = conversationRepository
@@ -64,7 +79,7 @@ public class ChatService {
                     .orElseThrow(() -> new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "Conversation not found"));
 
-            Message userMsg = new Message(conversationId, "user", userMessage);
+            Message userMsg = new Message(conversationId, "user", sanitizedMessage);
             messageRepository.save(userMsg);
 
             return conv;
@@ -76,7 +91,8 @@ public class ChatService {
 
         try {
             // 3. Generate response (placeholder -- real LLM integration in a future phase)
-            String response = generatePlaceholderResponse(userMessage);
+            String rawResponse = generatePlaceholderResponse(sanitizedMessage);
+            String response = outputFilter.filter(rawResponse);
 
             // 4. Stream response word-by-word
             String[] words = response.split(" ");
