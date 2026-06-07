@@ -19,6 +19,7 @@
         <module>tool-etag</module>
         <module>tool-rag</module>
         <module>tool-drive</module>
+        <module>agent-api</module>
         <module>agent-cli</module>
         <module>agent-integration-tests</module>
     </modules>
@@ -83,6 +84,11 @@
             <dependency>
                 <groupId>io.agenttoolbox</groupId>
                 <artifactId>tool-drive</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.agenttoolbox</groupId>
+                <artifactId>agent-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
