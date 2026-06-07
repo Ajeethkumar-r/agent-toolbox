@@ -28,6 +28,11 @@ spring:
 
 google:
   client-id: ${GOOGLE_CLIENT_ID:}
+  client-secret: ${GOOGLE_CLIENT_SECRET:}
+  redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8085/api/v1/auth/google/callback}
+
+token:
+  encryption-key: ${TOKEN_ENCRYPTION_KEY:default-dev-key-change-in-prod-32chars!}
 
 jwt:
   secret: ${JWT_SECRET:agent-toolbox-dev-secret-key-change-this-in-production-minimum-32-bytes}
