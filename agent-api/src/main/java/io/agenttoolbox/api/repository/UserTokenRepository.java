@@ -9,4 +9,6 @@ import java.util.UUID;
 public interface UserTokenRepository extends JpaRepository<UserToken, UUID> {
 
     Optional<UserToken> findByUserIdAndProviderAndDeletedAtIsNull(UUID userId, String provider);
+
+    Optional<UserToken> findByUserIdAndProvider(UUID userId, String provider);
 }

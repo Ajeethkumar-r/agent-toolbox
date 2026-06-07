@@ -82,7 +82,16 @@ public class ConversationService {
                 .findByIdAndUserIdAndDeletedAtIsNull(conversationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversation not found"));
 
-        conversation.setDeletedAt(Instant.now());
+        Instant now = Instant.now();
+        conversation.setDeletedAt(now);
         conversationRepository.save(conversation);
+
+        // Soft-delete all messages in the conversation
+        List<Message> messages = messageRepository
+                .findByConversationIdAndDeletedAtIsNullOrderByCreatedAtAsc(conversationId);
+        for (Message msg : messages) {
+            msg.setDeletedAt(now);
+        }
+        messageRepository.saveAll(messages);
     }
 }

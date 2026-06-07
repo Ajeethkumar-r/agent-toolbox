@@ -37,6 +37,35 @@ token:
 jwt:
   secret: ${JWT_SECRET:agent-toolbox-dev-secret-key-change-this-in-production-minimum-32-bytes}
 
+# LLM provider: "ollama" (local) or "gemini" (cloud)
+llm:
+  provider: ${LLM_PROVIDER:ollama}
+
+# Ollama (local) configuration
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+  model: ${OLLAMA_MODEL:llama3.1:8b}
+  temperature: 0.3
+  timeout-seconds: 120
+
+# Gemini (cloud) configuration
+gemini:
+  api-key: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-2.0-flash}
+  temperature: 0.3
+  max-output-tokens: 4096
+  timeout-seconds: 60
+
+# Rate limiting
+rate-limit:
+  daily-query-limit: 50
+  daily-token-budget: 500000
+  ip-requests-per-hour: 100
+
+# Circuit breaker — set to true to disable all LLM calls
+circuit-breaker:
+  enabled: false
+
 management:
   endpoints:
     web:

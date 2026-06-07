@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Toolbox — Chat Test</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  .header { padding: 12px 20px; background: #1a1a1a; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+  .header h1 { font-size: 16px; font-weight: 600; color: #fff; }
+  .header .status { font-size: 12px; padding: 3px 8px; border-radius: 10px; background: #2a2a2a; color: #888; }
+  .header .status.connected { background: #0d3320; color: #4ade80; }
+  .header .user-info { margin-left: auto; font-size: 12px; color: #aaa; }
+
+  /* Auth bar */
+  .auth-bar { padding: 10px 20px; background: #141414; border-bottom: 1px solid #2a2a2a; display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+  .auth-bar button { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; }
+  .btn-blue { background: #2563eb; color: #fff; }
+  .btn-blue:hover { background: #1d4ed8; }
+  .btn-green { background: #059669; color: #fff; }
+  .btn-green:hover { background: #047857; }
+  .btn-red { background: #dc2626; color: #fff; }
+  .btn-red:hover { background: #b91c1c; }
+  #googleSignInDiv { display: inline-block; }
+
+  /* Main layout */
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: 260px; background: #141414; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; flex-shrink: 0; }
+  .sidebar-header { padding: 12px 14px; border-bottom: 1px solid #2a2a2a; display: flex; justify-content: space-between; align-items: center; }
+  .sidebar-header span { font-size: 13px; font-weight: 600; color: #aaa; }
+  .sidebar-header button { padding: 5px 12px; font-size: 12px; border-radius: 5px; border: none; cursor: pointer; background: #059669; color: #fff; }
+  .sidebar-header button:hover { background: #047857; }
+  .conv-list { flex: 1; overflow-y: auto; padding: 6px; }
+  .conv-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #bbb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .conv-item:hover { background: #1e1e1e; }
+  .conv-item.active { background: #1e3a5f; color: #bfdbfe; }
+  .conv-item .conv-date { font-size: 10px; color: #555; margin-top: 2px; }
+  .conv-item .conv-delete { float: right; color: #555; font-size: 11px; padding: 0 4px; border-radius: 3px; }
+  .conv-item .conv-delete:hover { color: #f87171; background: #2a1515; }
+
+  /* Chat panel */
+  .chat-panel { flex: 1; display: flex; flex-direction: column; }
+
+  /* Chat area */
+  .chat-area { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .message { max-width: 85%; padding: 12px 16px; border-radius: 12px; line-height: 1.6; font-size: 14px; white-space: pre-wrap; word-wrap: break-word; }
+  .message.user { background: #1e3a5f; color: #bfdbfe; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .message.assistant { background: #1e1e1e; color: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 4px; }
+  .message.tool { background: #1a1a2e; color: #a78bfa; align-self: flex-start; font-size: 12px; padding: 6px 12px; border-radius: 6px; font-family: monospace; }
+  .message.error { background: #3b1111; color: #fca5a5; align-self: center; font-size: 13px; }
+  .message.system { background: transparent; color: #666; align-self: center; font-size: 12px; }
+  .msg-time { font-size: 10px; color: #555; margin-top: 4px; }
+  .msg-tokens { font-size: 10px; color: #4a5568; margin-top: 2px; }
+  .typing { display: inline-block; }
+  .typing::after { content: ''; display: inline-block; width: 6px; height: 14px; background: #888; margin-left: 2px; animation: blink 0.7s infinite; vertical-align: text-bottom; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Input area */
+  .input-area { padding: 16px 20px; background: #1a1a1a; border-top: 1px solid #2a2a2a; display: flex; gap: 8px; flex-shrink: 0; }
+  .input-area textarea { flex: 1; padding: 10px 14px; background: #1e1e1e; border: 1px solid #333; border-radius: 8px; color: #e0e0e0; font-size: 14px; font-family: inherit; resize: none; min-height: 44px; max-height: 120px; }
+  .input-area textarea:focus { outline: none; border-color: #2563eb; }
+  .input-area button { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .input-area .send-btn { background: #2563eb; color: #fff; }
+  .input-area .send-btn:hover { background: #1d4ed8; }
+  .input-area .send-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+  .input-area .stop-btn { background: #dc2626; color: #fff; }
+  .input-area .stop-btn:hover { background: #b91c1c; }
+
+  /* Info bar */
+  .info-bar { padding: 6px 20px; background: #141414; border-top: 1px solid #2a2a2a; display: flex; justify-content: space-between; font-size: 11px; color: #555; flex-shrink: 0; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Agent Toolbox</h1>
+  <span class="status" id="driveStatus">Drive: --</span>
+  <span class="status" id="llmStatus">LLM: --</span>
+  <span class="user-info" id="userInfo"></span>
+</div>
+
+<div class="auth-bar" id="authBar">
+  <div id="googleSignInDiv"></div>
+  <span style="color:#555;font-size:12px;">or</span>
+  <input type="text" id="refreshTokenInput" placeholder="Paste refresh token here..." style="flex:1;padding:8px 12px;background:#1e1e1e;border:1px solid #333;border-radius:6px;color:#e0e0e0;font-size:13px;font-family:monospace;" />
+  <button class="btn-blue" onclick="useRefreshToken()">Use Token</button>
+  <span id="authMsg" style="color:#666;font-size:13px;"></span>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span>Conversations</span>
+      <button onclick="newConversation()">+ New</button>
+    </div>
+    <div class="conv-list" id="convList">
+      <div style="padding:20px;color:#555;font-size:12px;text-align:center;">Sign in to load conversations</div>
+    </div>
+  </div>
+
+  <div class="chat-panel">
+    <div class="chat-area" id="chatArea">
+      <div class="message system">Sign in with Google above to start chatting.</div>
+    </div>
+
+    <div class="input-area">
+      <textarea id="msgInput" placeholder="Type a message..." rows="1" disabled
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+      <button class="stop-btn" id="stopBtn" onclick="stopGeneration()" style="display:none">Stop</button>
+    </div>
+  </div>
+</div>
+
+<div class="info-bar">
+  <span id="usageInfo">Usage: --</span>
+  <span id="convInfo">No conversation</span>
+</div>
+
+<script>
+const API = '';
+let token = '';
+let refreshToken = '';
+let tokenExpiresAt = 0;
+let conversationId = null;
+let isStreaming = false;
+let googleClientId = '';
+
+function el(id) { return document.getElementById(id); }
+
+// --- Auth ---
+
+async function initGoogleSignIn() {
+  try {
+    const res = await fetch(API + '/api/v1/auth/google/client-id');
+    const data = await res.json();
+    googleClientId = data.clientId;
+    if (!googleClientId) {
+      el('authMsg').textContent = 'GOOGLE_CLIENT_ID not configured on server';
+      return;
+    }
+    google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleGoogleSignIn,
+      auto_select: true
+    });
+    google.accounts.id.renderButton(el('googleSignInDiv'), {
+      theme: 'filled_black', size: 'medium', text: 'signin_with', shape: 'pill'
+    });
+    el('authMsg').textContent = '';
+  } catch(e) {
+    el('authMsg').textContent = 'Failed to init Google Sign-In';
+  }
+}
+
+async function handleGoogleSignIn(response) {
+  try {
+    el('authMsg').textContent = 'Authenticating...';
+    const res = await fetch(API + '/api/v1/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: response.credential })
+    });
+    const data = await res.json();
+    if (data.error) {
+      el('authMsg').textContent = 'Auth failed: ' + data.error;
+      return;
+    }
+    token = data.accessToken;
+    refreshToken = data.refreshToken;
+    tokenExpiresAt = Date.now() + (data.expiresIn * 1000) - 30000; // refresh 30s early
+
+    el('authMsg').textContent = '';
+    el('googleSignInDiv').classList.add('hidden');
+    if (data.user) {
+      el('userInfo').textContent = data.user.displayName || data.user.email;
+    }
+
+    onAuthenticated();
+  } catch(e) {
+    el('authMsg').textContent = 'Auth error: ' + e.message;
+  }
+}
+
+async function ensureFreshToken() {
+  if (Date.now() < tokenExpiresAt) return;
+  if (!refreshToken) return;
+  try {
+    const res = await fetch(API + '/api/v1/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    });
+    const data = await res.json();
+    token = data.accessToken;
+    refreshToken = data.refreshToken;
+    tokenExpiresAt = Date.now() + (data.expiresIn * 1000) - 30000;
+  } catch(e) {
+    el('authMsg').textContent = 'Session expired. Please sign in again.';
+    el('googleSignInDiv').classList.remove('hidden');
+  }
+}
+
+async function useRefreshToken() {
+  const rt = el('refreshTokenInput').value.trim();
+  if (!rt) return;
+  try {
+    el('authMsg').textContent = 'Authenticating...';
+    const res = await fetch(API + '/api/v1/auth/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: rt })
+    });
+    const data = await res.json();
+    if (data.error || !data.accessToken) {
+      el('authMsg').textContent = 'Failed: ' + (data.error || 'invalid response');
+      return;
+    }
+    token = data.accessToken;
+    refreshToken = data.refreshToken;
+    tokenExpiresAt = Date.now() + (data.expiresIn * 1000) - 30000;
+    el('refreshTokenInput').type = 'password';
+    el('authMsg').textContent = '';
+    if (data.user) {
+      el('userInfo').textContent = data.user.displayName || data.user.email;
+    }
+    onAuthenticated();
+  } catch(e) {
+    el('authMsg').textContent = 'Error: ' + e.message;
+  }
+}
+
+function onAuthenticated() {
+  checkDriveStatus();
+  fetchUsage();
+  loadConversations();
+}
+
+// --- Drive & Usage ---
+
+async function checkDriveStatus() {
+  await ensureFreshToken();
+  try {
+    const res = await fetch(API + '/api/v1/auth/google/drive/status', { headers: authHeaders() });
+    const data = await res.json();
+    const s = el('driveStatus');
+    if (data.connected) { s.textContent = 'Drive: connected'; s.className = 'status connected'; }
+    else { s.textContent = 'Drive: not connected'; s.className = 'status'; }
+  } catch(e) { el('driveStatus').textContent = 'Drive: error'; }
+}
+
+async function fetchUsage() {
+  await ensureFreshToken();
+  try {
+    const res = await fetch(API + '/api/v1/usage', { headers: authHeaders() });
+    const data = await res.json();
+    el('usageInfo').textContent =
+      `Queries: ${data.queryCount}/${data.dailyQueryLimit} | Tokens: ${(data.inputTokens+data.outputTokens).toLocaleString()}/${data.dailyTokenBudget.toLocaleString()}`;
+  } catch(e) {}
+}
+
+// --- Conversation sidebar ---
+
+async function loadConversations() {
+  await ensureFreshToken();
+  try {
+    const res = await fetch(API + '/api/v1/conversations', { headers: authHeaders() });
+    const data = await res.json();
+    renderConversationList(data);
+  } catch(e) {
+    el('convList').innerHTML = '<div style="padding:20px;color:#f87171;font-size:12px;">Failed to load</div>';
+  }
+}
+
+function renderConversationList(conversations) {
+  const list = el('convList');
+  if (!conversations || conversations.length === 0) {
+    list.innerHTML = '<div style="padding:20px;color:#555;font-size:12px;text-align:center;">No conversations yet. Click + New to start.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  for (const conv of conversations) {
+    const item = document.createElement('div');
+    item.className = 'conv-item' + (conv.id === conversationId ? ' active' : '');
+    item.dataset.id = conv.id;
+
+    const title = conv.title || 'Untitled';
+    const date = new Date(conv.updatedAt || conv.createdAt).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+
+    item.innerHTML = `<span class="conv-delete" onclick="event.stopPropagation();deleteConversation('${conv.id}')" title="Delete">x</span>
+      <div>${escapeHtml(title)}</div>
+      <div class="conv-date">${date}</div>`;
+    item.onclick = () => openConversation(conv.id);
+    list.appendChild(item);
+  }
+}
+
+async function openConversation(id) {
+  await ensureFreshToken();
+  conversationId = id;
+  el('convInfo').textContent = 'Conversation: ' + id.slice(0, 8) + '...';
+  el('msgInput').disabled = false;
+  el('sendBtn').disabled = false;
+
+  document.querySelectorAll('.conv-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.id === id);
+  });
+
+  try {
+    const res = await fetch(API + '/api/v1/conversations/' + id, { headers: authHeaders() });
+    const data = await res.json();
+    renderMessages(data.messages || []);
+  } catch(e) {
+    el('chatArea').innerHTML = '<div class="message error">Failed to load messages</div>';
+  }
+}
+
+function renderMessages(messages) {
+  const area = el('chatArea');
+  area.innerHTML = '';
+
+  if (messages.length === 0) {
+    area.innerHTML = '<div class="message system">No messages yet. Start chatting!</div>';
+    el('msgInput').focus();
+    return;
+  }
+
+  for (const msg of messages) {
+    const div = document.createElement('div');
+    div.className = 'message ' + msg.role;
+    div.textContent = msg.content || '';
+
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'msg-time';
+    timeDiv.textContent = new Date(msg.createdAt).toLocaleTimeString();
+    div.appendChild(timeDiv);
+
+    if (msg.role === 'assistant' && msg.tokenCount) {
+      const tokDiv = document.createElement('div');
+      tokDiv.className = 'msg-tokens';
+      tokDiv.textContent = msg.tokenCount + ' tokens';
+      div.appendChild(tokDiv);
+    }
+
+    area.appendChild(div);
+  }
+  area.scrollTop = area.scrollHeight;
+  el('msgInput').focus();
+}
+
+async function newConversation() {
+  if (!token) return;
+  await ensureFreshToken();
+  try {
+    const res = await fetch(API + '/api/v1/conversations', {
+      method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({})
+    });
+    const data = await res.json();
+    conversationId = data.id;
+    el('convInfo').textContent = 'Conversation: ' + conversationId.slice(0, 8) + '...';
+    el('chatArea').innerHTML = '<div class="message system">New conversation started. Try: "list files in my Google Drive"</div>';
+    el('msgInput').disabled = false;
+    el('sendBtn').disabled = false;
+    el('msgInput').focus();
+    loadConversations();
+  } catch(e) { addMessage('error', 'Failed to create conversation: ' + e.message); }
+}
+
+async function deleteConversation(id) {
+  await ensureFreshToken();
+  try {
+    await fetch(API + '/api/v1/conversations/' + id, { method: 'DELETE', headers: authHeaders() });
+    if (conversationId === id) {
+      conversationId = null;
+      el('chatArea').innerHTML = '<div class="message system">Conversation deleted. Select or create a new one.</div>';
+      el('msgInput').disabled = true;
+      el('sendBtn').disabled = true;
+      el('convInfo').textContent = 'No conversation';
+    }
+    loadConversations();
+  } catch(e) { addMessage('error', 'Failed to delete: ' + e.message); }
+}
+
+// --- Chat ---
+
+function addMessage(role, text) {
+  const div = document.createElement('div');
+  div.className = 'message ' + role;
+  div.textContent = text;
+  el('chatArea').appendChild(div);
+  el('chatArea').scrollTop = el('chatArea').scrollHeight;
+  return div;
+}
+
+async function sendMessage() {
+  const msg = el('msgInput').value.trim();
+  if (!msg || isStreaming || !conversationId) return;
+
+  await ensureFreshToken();
+
+  addMessage('user', msg);
+  el('msgInput').value = '';
+  el('msgInput').style.height = 'auto';
+
+  isStreaming = true;
+  el('sendBtn').style.display = 'none';
+  el('stopBtn').style.display = '';
+  el('msgInput').disabled = true;
+
+  const assistantDiv = addMessage('assistant', '');
+  assistantDiv.innerHTML = '<span class="typing"></span>';
+  let fullText = '';
+
+  try {
+    const res = await fetch(API + '/api/v1/chat', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversationId, message: msg })
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          var eventType = line.slice(6).trim();
+        }
+        if (!line.startsWith('data:')) continue;
+
+        const data = line.slice(5);
+        try {
+          const parsed = JSON.parse(data);
+
+          if (eventType === 'token' && parsed.content !== undefined) {
+            fullText += parsed.content;
+            assistantDiv.textContent = fullText;
+            assistantDiv.innerHTML += '<span class="typing"></span>';
+            el('chatArea').scrollTop = el('chatArea').scrollHeight;
+          } else if (eventType === 'tool_call' && parsed.tool) {
+            addMessage('tool', '>> calling ' + parsed.tool + '...');
+            el('chatArea').appendChild(assistantDiv);
+          } else if (eventType === 'done') {
+            assistantDiv.textContent = fullText;
+            if (parsed.outputTokens) {
+              const tokDiv = document.createElement('div');
+              tokDiv.className = 'msg-tokens';
+              tokDiv.textContent = `In: ${parsed.inputTokens || 0} | Out: ${parsed.outputTokens || 0} tokens`;
+              assistantDiv.appendChild(tokDiv);
+            }
+            el('llmStatus').textContent = `In: ${parsed.inputTokens || 0} Out: ${parsed.outputTokens || 0}`;
+          } else if (eventType === 'error' && parsed.error) {
+            addMessage('error', parsed.error);
+          } else if (eventType === 'stopped') {
+            addMessage('system', 'Generation stopped.');
+          }
+        } catch(e) {}
+        eventType = null;
+      }
+    }
+  } catch(e) {
+    addMessage('error', 'Stream error: ' + e.message);
+  }
+
+  if (!fullText && assistantDiv.parentNode) assistantDiv.remove();
+  isStreaming = false;
+  el('sendBtn').style.display = '';
+  el('stopBtn').style.display = 'none';
+  el('msgInput').disabled = false;
+  el('msgInput').focus();
+  fetchUsage();
+  loadConversations();
+}
+
+async function stopGeneration() {
+  try {
+    await fetch(API + '/api/v1/chat/stop', { method: 'POST', headers: authHeaders() });
+  } catch(e) {}
+}
+
+function authHeaders() { return { 'Authorization': 'Bearer ' + token }; }
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+el('msgInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// Boot
+window.addEventListener('load', initGoogleSignIn);
+</script>
+</body>
+</html>

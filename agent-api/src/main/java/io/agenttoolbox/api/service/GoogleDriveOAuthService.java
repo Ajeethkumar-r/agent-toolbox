@@ -105,10 +105,11 @@ public class GoogleDriveOAuthService {
                     ? tokenService.encrypt(refreshToken)
                     : null;
 
-            // Upsert: update existing or create new
+            // Upsert: find any existing row (including soft-deleted) or create new
             UserToken userToken = userTokenRepository
-                    .findByUserIdAndProviderAndDeletedAtIsNull(userId, PROVIDER)
+                    .findByUserIdAndProvider(userId, PROVIDER)
                     .orElseGet(() -> new UserToken(userId, PROVIDER));
+            userToken.setDeletedAt(null); // re-activate if previously revoked
 
             userToken.setAccessTokenEnc(accessTokenEnc);
             if (refreshTokenEnc != null) {

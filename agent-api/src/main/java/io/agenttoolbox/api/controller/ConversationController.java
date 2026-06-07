@@ -36,7 +36,7 @@ public class ConversationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ConversationDetail> getConversation(@PathVariable UUID id) {
+    public ResponseEntity<ConversationDetail> getConversation(@PathVariable("id") UUID id) {
         UUID userId = getAuthenticatedUserId();
         ConversationDetail detail = conversationService.getConversation(userId, id);
         return ResponseEntity.ok(detail);
@@ -50,7 +50,7 @@ public class ConversationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteConversation(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteConversation(@PathVariable("id") UUID id) {
         UUID userId = getAuthenticatedUserId();
         conversationService.deleteConversation(userId, id);
         return ResponseEntity.noContent().build();

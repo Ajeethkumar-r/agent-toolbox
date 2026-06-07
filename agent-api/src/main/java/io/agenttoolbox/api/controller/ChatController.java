@@ -22,7 +22,9 @@ import java.util.concurrent.CompletableFuture;
 @RequestMapping("/api/v1/chat")
 public class ChatController {
 
-    private static final long SSE_TIMEOUT_MS = 60_000L; // 60 seconds
+    // Generous timeout to accommodate tool calls (Drive API) + LLM generation.
+    // The LLM future has its own 120s timeout as a hard stop.
+    private static final long SSE_TIMEOUT_MS = 120_000L;
 
     private final ChatService chatService;
 
