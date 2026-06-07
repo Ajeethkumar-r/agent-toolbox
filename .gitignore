@@ -16,9 +16,8 @@ target/
 logs/
 .DS_Store
 Thumbs.db
-.env
-.env.*
 application-local.yaml
+application-local.properties
 application-dev.yaml
 secrets.yaml
 secrets.json
