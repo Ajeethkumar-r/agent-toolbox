@@ -25,3 +25,4 @@ secrets.json
 *.key
 .agent-toolbox/
 .superpowers/
+test-google-signin.html
