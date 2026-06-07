@@ -36,14 +36,25 @@ public class AuthController {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final GoogleDriveOAuthService googleDriveOAuthService;
+    private final String googleClientId;
 
     public AuthController(AuthService authService, JwtService jwtService,
                           UserRepository userRepository,
-                          GoogleDriveOAuthService googleDriveOAuthService) {
+                          GoogleDriveOAuthService googleDriveOAuthService,
+                          @org.springframework.beans.factory.annotation.Value("${google.client-id:}") String googleClientId) {
         this.authService = authService;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.googleDriveOAuthService = googleDriveOAuthService;
+        this.googleClientId = googleClientId;
+    }
+
+    /**
+     * Returns the Google OAuth client ID for frontend Sign-In integration.
+     */
+    @GetMapping("/auth/google/client-id")
+    public ResponseEntity<?> getGoogleClientId() {
+        return ResponseEntity.ok(Map.of("clientId", googleClientId != null ? googleClientId : ""));
     }
 
     @PostMapping("/auth/google")

@@ -1,5 +1,6 @@
 package io.agenttoolbox.api.config;
 
+import io.agenttoolbox.api.security.IpRateLimitFilter;
 import io.agenttoolbox.api.security.JwtAuthenticationFilter;
 import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -23,11 +24,14 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final IpRateLimitFilter ipRateLimitFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
+                          IpRateLimitFilter ipRateLimitFilter,
                           @Qualifier("corsConfigurationSource") CorsConfigurationSource corsConfigurationSource) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.ipRateLimitFilter = ipRateLimitFilter;
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
@@ -41,11 +45,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                        .requestMatchers("/health", "/actuator/**").permitAll()
+                        .requestMatchers("/health", "/actuator/**", "/test-chat.html").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/**").authenticated()
                         .anyRequest().denyAll()
                 )
+                .addFilterBefore(ipRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }

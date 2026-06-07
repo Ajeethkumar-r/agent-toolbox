@@ -48,7 +48,6 @@
         <dependency>
             <groupId>io.agenttoolbox</groupId>
             <artifactId>tool-drive</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Spring Boot -->
@@ -112,6 +111,20 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.12.6</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- LangChain4j LLM streaming (Ollama + Gemini) -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-ollama</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-google-ai-gemini</artifactId>
         </dependency>
 
         <!-- Google OAuth ID token verification -->
