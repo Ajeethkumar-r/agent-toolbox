@@ -24,8 +24,8 @@ public class DriveTools {
         this.driveService = driveService;
     }
 
-    @Tool("Search for files in the user's Google Drive by name or content query")
-    public String driveSearchFiles(@P("search query") String query) {
+    @Tool("Search for files in the user's Google Drive by name or content query. ALWAYS call this first to get the file ID before reading a file. Returns file IDs that can be used with driveGetFileContent.")
+    public String driveSearchFiles(@P("search query — a file name or keyword to search for") String query) {
         try {
             progress("Searching Drive for '%s'...", query);
             return driveService.searchFiles(drive, query);
@@ -35,8 +35,8 @@ public class DriveTools {
         }
     }
 
-    @Tool("Read the contents of a file from Google Drive")
-    public String driveGetFileContent(@P("the Google Drive file ID") String fileId) {
+    @Tool("Read the contents of a file from Google Drive. The fileId must be the actual Google Drive file ID (like '1aBcDeFgHiJkL'), NOT the file name. Use driveSearchFiles first to get the file ID.")
+    public String driveGetFileContent(@P("the Google Drive file ID (e.g. '1aBcDeFgHiJkL') — NOT the file name. Get this from driveSearchFiles or driveListFiles first.") String fileId) {
         try {
             progress("Reading file %s from Drive...", fileId);
             return driveService.getFileContent(drive, fileId);
@@ -73,8 +73,8 @@ public class DriveTools {
         }
     }
 
-    @Tool("Get metadata about a file on Google Drive")
-    public String driveGetFileMetadata(@P("the Google Drive file ID") String fileId) {
+    @Tool("Get metadata about a file on Google Drive. The fileId must be the actual Drive file ID, not the file name.")
+    public String driveGetFileMetadata(@P("the Google Drive file ID (e.g. '1aBcDeFgHiJkL') — NOT the file name") String fileId) {
         try {
             progress("Getting metadata for file %s...", fileId);
             return driveService.getFileMetadata(drive, fileId);

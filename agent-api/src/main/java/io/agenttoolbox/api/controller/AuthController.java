@@ -128,7 +128,7 @@ public class AuthController {
             googleDriveOAuthService.exchangeAndStoreTokens(code, userId);
             // Redirect to frontend success page
             return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(URI.create("http://localhost:3000/settings?drive=connected"))
+                    .location(URI.create("http://localhost:3002/settings?drive=connected"))
                     .build();
         } catch (IllegalArgumentException e) {
             log.error("Invalid state parameter in Google callback: {}", state);

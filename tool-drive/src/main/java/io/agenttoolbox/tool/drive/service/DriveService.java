@@ -33,6 +33,19 @@ public class DriveService {
     );
 
     /**
+     * Binary file types that need OCR/conversion via Google Drive's import.
+     */
+    private static final Set<String> BINARY_DOC_TYPES = Set.of(
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  // .docx
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",         // .xlsx
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
+            "application/msword",           // .doc
+            "application/vnd.ms-excel",     // .xls
+            "application/vnd.ms-powerpoint" // .ppt
+    );
+
+    /**
      * Searches for files matching the given query string.
      * The query is wrapped in fullText contains '...' syntax.
      *
@@ -86,8 +99,11 @@ public class DriveService {
             drive.files().export(fileId, exportMimeType)
                     .executeMediaAndDownloadTo(outputStream);
             content = outputStream.toByteArray();
+        } else if (BINARY_DOC_TYPES.contains(mimeType)) {
+            // Binary docs (PDF, DOCX, etc.) — copy to a temp Google Doc, export as text, then delete
+            content = extractTextViaTempDoc(drive, fileId, fileName);
         } else {
-            // Download regular file content
+            // Download regular file content (text files, CSV, JSON, etc.)
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             drive.files().get(fileId)
                     .executeMediaAndDownloadTo(outputStream);
@@ -214,6 +230,35 @@ public class DriveService {
         sb.append("Link: ").append(file.getWebViewLink() != null ? file.getWebViewLink() : "N/A").append("\n");
         sb.append("Shared: ").append(file.getShared() != null ? file.getShared() : "N/A");
         return sb.toString();
+    }
+
+    /**
+     * Extracts text from binary documents (PDF, DOCX, etc.) by copying the file
+     * to a temporary Google Doc (Drive does OCR/conversion), exporting as plain text,
+     * then deleting the temp copy.
+     */
+    private byte[] extractTextViaTempDoc(Drive drive, String fileId, String fileName) throws IOException {
+        File tempDocMeta = new File();
+        tempDocMeta.setName("[temp] " + fileName);
+        tempDocMeta.setMimeType("application/vnd.google-apps.document");
+
+        File tempDoc = drive.files().copy(fileId, tempDocMeta)
+                .setFields("id")
+                .execute();
+
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            drive.files().export(tempDoc.getId(), "text/plain")
+                    .executeMediaAndDownloadTo(outputStream);
+            return outputStream.toByteArray();
+        } finally {
+            // Always clean up the temp doc
+            try {
+                drive.files().delete(tempDoc.getId()).execute();
+            } catch (Exception e) {
+                log.warn("Failed to delete temp doc {}: {}", tempDoc.getId(), e.getMessage());
+            }
+        }
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────
