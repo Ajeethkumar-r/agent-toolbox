@@ -47,7 +47,10 @@ public class IpRateLimitFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         // Only rate-limit API endpoints
-        return !path.startsWith("/api/");
+        if (!path.startsWith("/api/")) return true;
+        // Skip rate limiting for localhost in development
+        String ip = getClientIp(request);
+        return "127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || "localhost".equals(ip);
     }
 
     @Override
